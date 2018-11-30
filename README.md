@@ -1,4 +1,4 @@
-Open2internet-spring-boot-starter
+open2internet-spring-boot-starter
 =================================
 
 Expose your local Spring Boot Application to internet, for example testing, demonstration for customers.
