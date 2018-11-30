@@ -52,7 +52,7 @@ Forwarding Rule               https://19erktgk.microservices.club -> http://127.
 * Https by default, and supplied by Let's Encrypt. You can use http also.
 * You can customize your domain name permanently, for example appName.foobar.com, please contact me, just cname required.
 * Tips: please share QR Code to your audiences during presentation.
-* Why not ngrok? you know you are developing Spring Boot application, and make life easy. :beer:
+* Why not ngrok? you know you are developing Spring Boot application, why not to make life easy? :beer:
 * How to disable open2internet feature? Please add following on your application.properties.
 
 ```properties
@@ -67,7 +67,7 @@ open2internet.disabled=true
 
 ### Thanks
 
-I want to say thanks to [RSocket](http://rsocket.io) & [Reactor](https://projectreactor.io/), and I just write little code to implement this features, really true. :smile:
+I want to say thanks to [RSocket](http://rsocket.io) & [Reactor](https://projectreactor.io/), and I just write little code to implement this features, really true. :rose:
 
 ### References
 
