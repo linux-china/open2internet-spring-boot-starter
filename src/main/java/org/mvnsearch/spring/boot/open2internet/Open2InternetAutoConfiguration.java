@@ -19,6 +19,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,6 +36,7 @@ public class Open2InternetAutoConfiguration implements ApplicationListener<WebSe
             "Connected Status              online\n" +
             "Management Token              %s\n" +
             "Internet Web Interface        %s\n" +
+            "Internet Web QR Code          %s\n" +
             "Local Web Interface           %s\n" +
             "Forwarding Rule               %s -> %s\n";
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
@@ -71,7 +73,9 @@ public class Open2InternetAutoConfiguration implements ApplicationListener<WebSe
                         try {
                             Map<String, Object> info = objectMapper.readValue(new ByteBufferBackedInputStream(payload.getData()), HashMap.class);
                             if ("app.exposed".equals(info.get("eventType"))) {
-                                System.out.println(String.format(hint, info.get("token"), info.get("uri"), localWebUri, info.get("uri"), localWebUri));
+                                String internetUri = (String) info.get("uri");
+                                String qrCodeUri = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + URLEncoder.encode(internetUri, "utf-8");
+                                System.out.println(String.format(hint, info.get("token"), internetUri, qrCodeUri, localWebUri, internetUri, localWebUri));
                             }
                         } catch (Exception ignore) {
 
