@@ -1,3 +1,5 @@
+[![](https://jitpack.io/v/linux-china/open2internet-spring-boot-starter.svg)](https://jitpack.io/#linux-china/open2internet-spring-boot-starter)
+
 Open2Internet-spring-boot-starter
 =================================
 
