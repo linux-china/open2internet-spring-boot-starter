@@ -51,8 +51,11 @@ public class Open2InternetAutoConfiguration implements ApplicationListener<WebSe
     public void onApplicationEvent(WebServerInitializedEvent event) {
         int localListenPort = event.getWebServer().getPort();
         this.localWebUri = "http://127.0.0.1:" + localListenPort;
+        //validate disabled for not
+        if(properties.isDisabled()) return;
         this.webClient = WebClient.create(localWebUri);
         Open2InternetAuthentication authentication = new Open2InternetAuthentication(properties.getAccessToken(), properties.getCustomDomain());
+        // connect to internet exposed service gateway
         RSocketFactory
                 .connect()
                 .setupPayload(DefaultPayload.create(authentication.toString()))
