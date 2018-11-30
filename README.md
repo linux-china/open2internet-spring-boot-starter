@@ -12,6 +12,7 @@ Expose your local Spring Boot(2.0+) Application to internet, for example demonst
 * Prototype demonstration for your customers.
 * Interaction with your audiences during presentation, and you know you application runs on your laptop.
 * Development debug if you develop applications connected with Wechat, facebook etc, and you know HTTP callback required from these platforms.
+* You can expose your applications in Kubernetes for testing event without Ingress required.
 
 ### How to use
 
@@ -56,7 +57,7 @@ Forwarding Rule               https://19erktgk.microservices.club -> http://127.
 * Https by default, and supplied by Let's Encrypt. You can use http also.
 * You can customize your domain name permanently, for example appName.foobar.com, please contact me, just cname required.
 * Tips: please share QR Code to your audiences during presentation.
-* Why not ngrok? you know you are developing Spring Boot application, why not to make life easy? :beer:
+* Why not ngrok? No env required, in Kubernetes, Serverless mode, Java friendly etc. You are developing Spring Boot application. Why not to make life easy? :beer:
 * How to disable open2internet feature? Please add following on your application.properties.
 
 ```properties
