@@ -1,4 +1,4 @@
-package org.mvnsearch.spring.boot.open2internet;
+package org.mvnsearch.spring.boot.open2internet.rsocket;
 
 /**
  * open2internet authentication
@@ -9,8 +9,8 @@ public class Open2InternetAuthentication {
     private String token;
     private String domain;
 
-    public Open2InternetAuthentication(String token) {
-        this.token = token;
+    public Open2InternetAuthentication() {
+
     }
 
     public Open2InternetAuthentication(String token, String domain) {
