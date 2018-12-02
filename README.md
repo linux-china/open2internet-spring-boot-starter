@@ -65,6 +65,19 @@ Forwarding Rule               https://19erktgk.microservices.club -> http://127.
 open2internet.enable=false
 ```
 
+### Connect or disconnect dynamically
+
+* Disconnect
+```
+curl -H "Content-Type:application/json" -X POST -d '{}' http://127.0.0.1:8080/actuator/disconnect
+
+```
+
+* Connect
+```
+curl -H "Content-Type:application/json" -X POST -d '{}' http://127.0.0.1:8080/actuator/connect
+```
+
 ### Todo
 
 * Management console to replay HTTP requests.
