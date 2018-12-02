@@ -25,9 +25,9 @@ public class Open2InternetProperties {
     private String customDomain;
 
     /**
-     * disable expose to internet
+     * enable expose to internet
      */
-    private boolean disabled = false;
+    private boolean enable = true;
 
     public String getUri() {
         return uri;
@@ -53,11 +53,11 @@ public class Open2InternetProperties {
         this.customDomain = customDomain;
     }
 
-    public boolean isDisabled() {
-        return disabled;
+    public boolean isEnable() {
+        return enable;
     }
 
-    public void setDisabled(boolean disabled) {
-        this.disabled = disabled;
+    public void setEnable(boolean enable) {
+        this.enable = enable;
     }
 }
