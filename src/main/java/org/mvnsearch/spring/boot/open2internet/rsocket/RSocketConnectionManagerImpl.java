@@ -24,24 +24,24 @@ import java.util.Map;
 public class RSocketConnectionManagerImpl extends JsonSupport implements RSocketConnectionManager {
     private static final String ANSI_GREEN = "\u001B[32m";
     private static final String ANSI_RESET = "\u001B[0m";
-
-    private static String hint = "open2internet by @linux_china\n" +
-            "\n" +
-            "Connected Status              online\n" +
-            "Management Token              %s\n" +
-            "Internet Web Interface        %s\n" +
-            "Internet Web QR Code          %s\n" +
-            "Local Web Interface           %s\n" +
-            "Forwarding Rule               %s -> %s\n";
+    /**
+     * authentication to upstream rsocket
+     */
+    private Open2InternetAuthentication authentication;
+    /**
+     * upstream rsocket uri
+     */
+    private String upstreamRsocketUri;
     /**
      * RSocket connection
      */
     private RSocket rsocket;
+    /**
+     * connect info
+     */
+    private ConnectInfo connectInfo;
 
     private LocalHttpServiceClient localHttpServiceClient;
-
-    private Open2InternetAuthentication authentication;
-    private String upstreamRsocketUri;
 
     public RSocketConnectionManagerImpl(ObjectMapper objectMapper, String upstreamRsocketUri, Open2InternetAuthentication authentication, LocalHttpServiceClient localHttpServiceClient) {
         super(objectMapper);
@@ -51,6 +51,9 @@ public class RSocketConnectionManagerImpl extends JsonSupport implements RSocket
     }
 
     public void connect() {
+        if (this.rsocket != null && rsocket.availability() != 0.0) {
+            return;
+        }
         // connect to internet exposed service gateway
         rsocket = RSocketFactory
                 .connect()
@@ -72,10 +75,12 @@ public class RSocketConnectionManagerImpl extends JsonSupport implements RSocket
                             @SuppressWarnings("unchecked")
                             Map<String, Object> info = readValue(payload.getData(), HashMap.class);
                             if ("app.exposed".equals(info.get("eventType"))) {
-                                String internetUri = (String) info.get("uri");
-                                String localBaseWebUri = localHttpServiceClient.getLocalBaseWebUri();
-                                String qrCodeUri = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + URLEncoder.encode(internetUri, "utf-8");
-                                outputAsGreen(String.format(hint, info.get("token"), internetUri, qrCodeUri, localBaseWebUri, internetUri, localBaseWebUri));
+                                connectInfo = new ConnectInfo();
+                                connectInfo.setInternetUri((String) info.get("uri"));
+                                connectInfo.setLocalBaseWebUri(localHttpServiceClient.getLocalBaseWebUri());
+                                connectInfo.setAccessToken((String) info.get("token"));
+                                connectInfo.setQrCodeUri("https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + URLEncoder.encode(connectInfo.getInternetUri(), "utf-8"));
+                                outputAsGreen(connectInfo.hint());
                             }
                         } catch (Exception ignore) {
 
@@ -89,13 +94,22 @@ public class RSocketConnectionManagerImpl extends JsonSupport implements RSocket
     }
 
     public void disConnect() {
-        rsocket.dispose();
+        if (rsocket != null) {
+            rsocket.dispose();
+        }
         rsocket = null;
+        connectInfo = null;
+        outputAsGreen("Disconnected from Open2Internet.");
     }
 
     @Override
     public boolean isConnected() {
         return rsocket != null && rsocket.availability() > 0;
+    }
+
+    @Override
+    public ConnectInfo getConnectInfo() {
+        return this.connectInfo;
     }
 
     private void outputAsGreen(String text) {
