@@ -12,4 +12,6 @@ public interface RSocketConnectionManager {
     void disConnect();
 
     boolean isConnected();
+
+    ConnectInfo getConnectInfo();
 }
