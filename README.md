@@ -52,6 +52,19 @@ Forwarding Rule               https://19erktgk.microservices.club -> http://127.
 
 * Click url of internet web interface for testing, or copy it to share with other guys.
 
+### Connect or disconnect dynamically
+For some reason, you disable open2internet during app start, and if you want to turn it on for testing, you can following ways.
+
+* Disconnect
+```
+curl -H "Content-Type:application/json" -X POST -d '{}' http://127.0.0.1:8080/actuator/disconnect
+
+```
+
+* Connect
+```
+curl -H "Content-Type:application/json" -X POST -d '{}' http://127.0.0.1:8080/actuator/connect
+```
 
 ### Q&A
 
@@ -63,19 +76,6 @@ Forwarding Rule               https://19erktgk.microservices.club -> http://127.
 
 ```properties
 open2internet.enable=false
-```
-
-### Connect or disconnect dynamically
-
-* Disconnect
-```
-curl -H "Content-Type:application/json" -X POST -d '{}' http://127.0.0.1:8080/actuator/disconnect
-
-```
-
-* Connect
-```
-curl -H "Content-Type:application/json" -X POST -d '{}' http://127.0.0.1:8080/actuator/connect
 ```
 
 ### Todo
