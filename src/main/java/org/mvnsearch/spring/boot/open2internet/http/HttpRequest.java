@@ -1,4 +1,4 @@
-package org.mvnsearch.spring.boot.open2internet;
+package org.mvnsearch.spring.boot.open2internet.http;
 
 import java.util.HashMap;
 import java.util.Map;
