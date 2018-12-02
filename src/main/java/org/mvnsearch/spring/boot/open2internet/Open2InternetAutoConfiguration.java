@@ -1,28 +1,19 @@
 package org.mvnsearch.spring.boot.open2internet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
-import io.rsocket.AbstractRSocket;
-import io.rsocket.Payload;
-import io.rsocket.RSocket;
-import io.rsocket.RSocketFactory;
-import io.rsocket.uri.UriTransportRegistry;
-import io.rsocket.util.DefaultPayload;
+import org.mvnsearch.spring.boot.open2internet.http.LocalHttpServiceClient;
+import org.mvnsearch.spring.boot.open2internet.http.LocalHttpServiceClientImpl;
+import org.mvnsearch.spring.boot.open2internet.rsocket.Open2InternetAuthentication;
+import org.mvnsearch.spring.boot.open2internet.rsocket.RSocketConnectionManager;
+import org.mvnsearch.spring.boot.open2internet.rsocket.RSocketConnectionManagerImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.web.reactive.function.client.ClientResponse;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Map;
+import javax.annotation.PreDestroy;
 
 /**
  * Open2Internet auto configuration
@@ -31,138 +22,48 @@ import java.util.Map;
  */
 @Configuration
 @EnableConfigurationProperties(Open2InternetProperties.class)
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 public class Open2InternetAutoConfiguration implements ApplicationListener<WebServerInitializedEvent> {
-    private static final String ANSI_GREEN = "\u001B[32m";
-    private static final String ANSI_RESET = "\u001B[0m";
-
-    private static String hint = "open2internet by @linux_china\n" +
-            "\n" +
-            "Connected Status              online\n" +
-            "Management Token              %s\n" +
-            "Internet Web Interface        %s\n" +
-            "Internet Web QR Code          %s\n" +
-            "Local Web Interface           %s\n" +
-            "Forwarding Rule               %s -> %s\n";
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
     private Open2InternetProperties properties;
     /**
-     * web client to call local http service
+     * local http service client
      */
-    private WebClient webClient;
+    private LocalHttpServiceClient localHttpServiceClient;
     /**
-     * local base web URI
+     * rsocket connect manager
      */
-    private String localBaseWebUri = "http://127.0.0.1:8080";
-    /**
-     * RSocket connection
-     */
-    private RSocket rsocket;
+    private RSocketConnectionManager rSocketConnectionManager;
+
+    private Open2InternetEndpoint endpoint = new Open2InternetEndpoint();
 
     @Override
     public void onApplicationEvent(WebServerInitializedEvent event) {
         int localListenPort = event.getWebServer().getPort();
-        this.localBaseWebUri = "http://127.0.0.1:" + localListenPort;
-        this.webClient = WebClient.create(localBaseWebUri);
-        //validate disabled for not
-        if (properties.isDisabled()) return;
-        connect();
-    }
-
-    public void connect() {
+        String localBaseWebUri = "http://127.0.0.1:" + localListenPort;
+        this.localHttpServiceClient = new LocalHttpServiceClientImpl(objectMapper, localBaseWebUri);
         Open2InternetAuthentication authentication = new Open2InternetAuthentication(properties.getAccessToken(), properties.getCustomDomain());
-        // connect to internet exposed service gateway
-        rsocket = RSocketFactory
-                .connect()
-                .setupPayload(DefaultPayload.create(authentication.toString()))
-                .acceptor(rsocketPeer -> new AbstractRSocket() {
-                    @Override
-                    public Mono<Payload> requestResponse(Payload payload) {
-                        try {
-                            HttpRequest httpRequest = objectMapper.readValue(new ByteBufferBackedInputStream(payload.getData()), HttpRequest.class);
-                            return getHttpResponse(httpRequest).map(httpResponse -> DefaultPayload.create(toJson(httpResponse)));
-                        } catch (Exception e) {
-                            return Mono.just(DefaultPayload.create(toJsonException(e)));
-                        }
-                    }
-
-                    @SuppressWarnings("unchecked")
-                    @Override
-                    public Mono<Void> fireAndForget(Payload payload) { //todo please use metadataPush instead later
-                        try {
-                            Map<String, Object> info = objectMapper.readValue(new ByteBufferBackedInputStream(payload.getData()), HashMap.class);
-                            if ("app.exposed".equals(info.get("eventType"))) {
-                                String internetUri = (String) info.get("uri");
-                                String qrCodeUri = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + URLEncoder.encode(internetUri, "utf-8");
-                                outputAsGreen(String.format(hint, info.get("token"), internetUri, qrCodeUri, localBaseWebUri, internetUri, localBaseWebUri));
-                            }
-                        } catch (Exception ignore) {
-
-                        }
-                        return Mono.empty();
-                    }
-                })
-                .transport(UriTransportRegistry.clientForUri(properties.getUri()))
-                .start()
-                .block();
-    }
-
-    public void disConnect() {
-        rsocket.dispose();
-        rsocket = null;
-    }
-
-    public Mono<HttpResponse> getHttpResponse(HttpRequest httpRequest) {
-        WebClient.RequestBodySpec webRequest = webClient.method(HttpMethod.valueOf(httpRequest.getMethod()))
-                .uri(httpRequest.getRequestUri())
-                .headers(httpHeaders -> {
-                    for (Map.Entry<String, String> entry : httpRequest.getHeaders().entrySet()) {
-                        httpHeaders.add(entry.getKey(), entry.getValue());
-                    }
-                });
-        if (httpRequest.getBody() != null) {
-            webRequest.body(Mono.just(new ByteArrayResource(httpRequest.getBody())), ByteArrayResource.class);
-        }
-        Mono<ClientResponse> clientResponseMono = webRequest.exchange();
-        return clientResponseMono
-                .map(clientResponse -> {
-                    HttpResponse httpResponse = new HttpResponse();
-                    httpResponse.setStatus(clientResponse.rawStatusCode());
-                    HttpHeaders httpHeaders = clientResponse.headers().asHttpHeaders();
-                    for (String name : httpHeaders.keySet()) {
-                        httpResponse.addHeader(name, httpHeaders.getFirst(name));
-                    }
-                    return httpResponse;
-                })
-                .zipWith(clientResponseMono.flatMap(clientResponse -> clientResponse.bodyToMono(ByteArrayResource.class)), (httpResponse, byteArrayResource) -> {
-                    if (byteArrayResource != null) {
-                        httpResponse.setBody(byteArrayResource.getByteArray());
-                    }
-                    return httpResponse;
-                });
-    }
-
-    public String toJson(HttpResponse httpResponse) {
-        try {
-            return objectMapper.writeValueAsString(httpResponse);
-        } catch (Exception e) {
-            return "{}";
+        this.rSocketConnectionManager = new RSocketConnectionManagerImpl(objectMapper, properties.getUri(), authentication, localHttpServiceClient);
+        //reset endpoint
+        this.endpoint.setProperties(properties);
+        this.endpoint.setLocalHttpServiceClient(localHttpServiceClient);
+        this.endpoint.setRsocketConnectionManager(rSocketConnectionManager);
+        //validate enable for not
+        if (properties.isEnable()) {
+            rSocketConnectionManager.connect();
         }
     }
 
-    public String toJsonException(Exception e) {
-        HttpResponse httpResponse = new HttpResponse();
-        httpResponse.setStatus(500);
-        httpResponse.addHeader("Content-Type", "text/plain;charset=UTF-8");
-        httpResponse.setBody(e.getMessage().getBytes());
-        return toJson(httpResponse);
+    @Bean
+    public Open2InternetEndpoint open2InternetEndpoint() {
+        return this.endpoint;
     }
 
-
-    public void outputAsGreen(String text) {
-        System.out.println(ANSI_GREEN + text + ANSI_RESET);
+    @PreDestroy
+    public void destroy() {
+        rSocketConnectionManager.disConnect();
     }
 
 }
