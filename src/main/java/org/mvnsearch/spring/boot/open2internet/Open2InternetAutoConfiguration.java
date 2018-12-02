@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import io.rsocket.AbstractRSocket;
 import io.rsocket.Payload;
+import io.rsocket.RSocket;
 import io.rsocket.RSocketFactory;
 import io.rsocket.uri.UriTransportRegistry;
 import io.rsocket.util.DefaultPayload;
@@ -31,6 +32,9 @@ import java.util.Map;
 @Configuration
 @EnableConfigurationProperties(Open2InternetProperties.class)
 public class Open2InternetAutoConfiguration implements ApplicationListener<WebServerInitializedEvent> {
+    private static final String ANSI_GREEN = "\u001B[32m";
+    private static final String ANSI_RESET = "\u001B[0m";
+
     private static String hint = "open2internet by @linux_china\n" +
             "\n" +
             "Connected Status              online\n" +
@@ -44,19 +48,33 @@ public class Open2InternetAutoConfiguration implements ApplicationListener<WebSe
     private ObjectMapper objectMapper;
     @Autowired
     private Open2InternetProperties properties;
+    /**
+     * web client to call local http service
+     */
     private WebClient webClient;
-    private String localWebUri = "http://127.0.0.1:8080";
+    /**
+     * local base web URI
+     */
+    private String localBaseWebUri = "http://127.0.0.1:8080";
+    /**
+     * RSocket connection
+     */
+    private RSocket rsocket;
 
     @Override
     public void onApplicationEvent(WebServerInitializedEvent event) {
         int localListenPort = event.getWebServer().getPort();
-        this.localWebUri = "http://127.0.0.1:" + localListenPort;
+        this.localBaseWebUri = "http://127.0.0.1:" + localListenPort;
+        this.webClient = WebClient.create(localBaseWebUri);
         //validate disabled for not
-        if(properties.isDisabled()) return;
-        this.webClient = WebClient.create(localWebUri);
+        if (properties.isDisabled()) return;
+        connect();
+    }
+
+    public void connect() {
         Open2InternetAuthentication authentication = new Open2InternetAuthentication(properties.getAccessToken(), properties.getCustomDomain());
         // connect to internet exposed service gateway
-        RSocketFactory
+        rsocket = RSocketFactory
                 .connect()
                 .setupPayload(DefaultPayload.create(authentication.toString()))
                 .acceptor(rsocketPeer -> new AbstractRSocket() {
@@ -78,7 +96,7 @@ public class Open2InternetAutoConfiguration implements ApplicationListener<WebSe
                             if ("app.exposed".equals(info.get("eventType"))) {
                                 String internetUri = (String) info.get("uri");
                                 String qrCodeUri = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + URLEncoder.encode(internetUri, "utf-8");
-                                System.out.println(String.format(hint, info.get("token"), internetUri, qrCodeUri, localWebUri, internetUri, localWebUri));
+                                outputAsGreen(String.format(hint, info.get("token"), internetUri, qrCodeUri, localBaseWebUri, internetUri, localBaseWebUri));
                             }
                         } catch (Exception ignore) {
 
@@ -89,6 +107,11 @@ public class Open2InternetAutoConfiguration implements ApplicationListener<WebSe
                 .transport(UriTransportRegistry.clientForUri(properties.getUri()))
                 .start()
                 .block();
+    }
+
+    public void disConnect() {
+        rsocket.dispose();
+        rsocket = null;
     }
 
     public Mono<HttpResponse> getHttpResponse(HttpRequest httpRequest) {
@@ -135,6 +158,11 @@ public class Open2InternetAutoConfiguration implements ApplicationListener<WebSe
         httpResponse.addHeader("Content-Type", "text/plain;charset=UTF-8");
         httpResponse.setBody(e.getMessage().getBytes());
         return toJson(httpResponse);
+    }
+
+
+    public void outputAsGreen(String text) {
+        System.out.println(ANSI_GREEN + text + ANSI_RESET);
     }
 
 }
