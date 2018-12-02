@@ -62,7 +62,7 @@ Forwarding Rule               https://19erktgk.microservices.club -> http://127.
 * How to disable open2internet feature? Please add following on your application.properties.
 
 ```properties
-open2internet.disabled=true
+open2internet.enable=false
 ```
 
 ### Todo
