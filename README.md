@@ -50,20 +50,24 @@ Local Web Interface           http://127.0.0.1:58274
 Forwarding Rule               https://19erktgk.microservices.club -> http://127.0.0.1:58274
 ```
 
-* Click url of internet web interface for testing, or copy it to share with other guys.
+* Click url of internet web interface for testing, or copy it to share with other guys. Or following Spring Boot endpoint:
+
+```
+curl http://127.0.0.1:8080/actuator/open2internet
+```
 
 ### Connect or disconnect dynamically
 For some reason, you disable open2internet during app start, and if you want to turn it on for testing, you can following ways.
 
 * Disconnect
 ```
-curl -H "Content-Type:application/json" -X POST -d '{}' http://127.0.0.1:8080/actuator/disconnect
+curl -H "Content-Type:application/json" -X POST -d '{}' http://127.0.0.1:8080/actuator/open2internet/disconnect
 
 ```
 
 * Connect
 ```
-curl -H "Content-Type:application/json" -X POST -d '{}' http://127.0.0.1:8080/actuator/connect
+curl -H "Content-Type:application/json" -X POST -d '{}' http://127.0.0.1:8080/actuator/open2internet/connect
 ```
 
 ### Q&A
