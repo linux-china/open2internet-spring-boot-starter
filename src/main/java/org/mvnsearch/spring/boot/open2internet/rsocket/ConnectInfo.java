@@ -53,7 +53,7 @@ public class ConnectInfo {
         this.accessToken = accessToken;
     }
 
-    public String getHint() {
+    public String hint() {
         return String.format(HINT_FORMAT, accessToken, internetUri, qrCodeUri, localBaseWebUri, internetUri, localBaseWebUri);
     }
 
