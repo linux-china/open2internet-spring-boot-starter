@@ -15,7 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
         <spring-boot.version>2.1.3.RELEASE</spring-boot.version>
-        <rsocket.version>0.11.16</rsocket.version>
+        <rsocket.version>0.12.1</rsocket.version>
     </properties>
 
     <developers>
