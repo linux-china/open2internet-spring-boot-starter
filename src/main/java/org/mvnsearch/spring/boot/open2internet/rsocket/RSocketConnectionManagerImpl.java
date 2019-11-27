@@ -13,6 +13,7 @@ import org.mvnsearch.spring.boot.open2internet.http.LocalHttpServiceClient;
 import reactor.core.publisher.Mono;
 
 import java.net.URLEncoder;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -70,10 +71,21 @@ public class RSocketConnectionManagerImpl extends JsonSupport implements RSocket
                     }
 
                     @Override
-                    public Mono<Void> fireAndForget(Payload payload) { //todo please use metadataPush instead later
+                    public Mono<Void> fireAndForget(Payload payload) { 
+                        displayInfo(payload.getData());
+                        return Mono.empty();
+                    }
+
+                    @Override
+                    public Mono<Void> metadataPush(Payload payload) {
+                        displayInfo(payload.getMetadata());
+                        return Mono.empty();
+                    }
+
+                    private void displayInfo(ByteBuffer jsonData) {
                         try {
                             @SuppressWarnings("unchecked")
-                            Map<String, Object> info = readValue(payload.getData(), HashMap.class);
+                            Map<String, Object> info = readValue(jsonData, HashMap.class);
                             if ("app.exposed".equals(info.get("eventType"))) {
                                 connectInfo = new ConnectInfo();
                                 connectInfo.setInternetUri((String) info.get("uri"));
@@ -85,7 +97,6 @@ public class RSocketConnectionManagerImpl extends JsonSupport implements RSocket
                         } catch (Exception ignore) {
 
                         }
-                        return Mono.empty();
                     }
                 })
                 .transport(UriTransportRegistry.clientForUri(upstreamRsocketUri))
