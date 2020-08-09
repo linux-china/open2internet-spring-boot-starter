@@ -4,14 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.rsocket.AbstractRSocket;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
-import io.rsocket.RSocketFactory;
-import io.rsocket.uri.UriTransportRegistry;
+import io.rsocket.core.RSocketConnector;
+import io.rsocket.transport.netty.client.TcpClientTransport;
 import io.rsocket.util.DefaultPayload;
 import org.mvnsearch.spring.boot.open2internet.JsonSupport;
 import org.mvnsearch.spring.boot.open2internet.http.HttpRequest;
 import org.mvnsearch.spring.boot.open2internet.http.LocalHttpServiceClient;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -55,11 +56,12 @@ public class RSocketConnectionManagerImpl extends JsonSupport implements RSocket
         if (this.rsocket != null && rsocket.availability() != 0.0) {
             return;
         }
+        URI serverUri = URI.create(upstreamRsocketUri);
         // connect to internet exposed service gateway
-        rsocket = RSocketFactory
-                .connect()
+        rsocket = RSocketConnector
+                .create()
                 .setupPayload(DefaultPayload.create(authentication.toString()))
-                .acceptor(rsocketPeer -> new AbstractRSocket() {
+                .acceptor((connectionSetupPayload, rSocket) -> Mono.just(new AbstractRSocket() {
                     @Override
                     public Mono<Payload> requestResponse(Payload payload) {
                         try {
@@ -71,7 +73,7 @@ public class RSocketConnectionManagerImpl extends JsonSupport implements RSocket
                     }
 
                     @Override
-                    public Mono<Void> fireAndForget(Payload payload) { 
+                    public Mono<Void> fireAndForget(Payload payload) {
                         displayInfo(payload.getData());
                         return Mono.empty();
                     }
@@ -98,9 +100,8 @@ public class RSocketConnectionManagerImpl extends JsonSupport implements RSocket
 
                         }
                     }
-                })
-                .transport(UriTransportRegistry.clientForUri(upstreamRsocketUri))
-                .start()
+                }))
+                .connect(TcpClientTransport.create(serverUri.getHost(), serverUri.getPort()))
                 .block();
     }
 
