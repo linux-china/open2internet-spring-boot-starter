@@ -1,5 +1,7 @@
 package org.mvnsearch.spring.boot.open2internet.rsocket;
 
+import java.util.List;
+
 /**
  * RSocket connection manager
  *
@@ -13,5 +15,5 @@ public interface RSocketConnectionManager {
 
     boolean isConnected();
 
-    ConnectInfo getConnectInfo();
+    List<ConnectInfo> getConnectInfo();
 }
