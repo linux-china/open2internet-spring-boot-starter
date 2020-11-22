@@ -11,7 +11,7 @@ You can test your application from anywhere, Kubernetes, Serverless, Lambda styl
 ### Use cases
 
 * Prototype demonstration for your customers.
-* Interaction with your audiences during presentation, and you know you application runs on your laptop.
+* Interaction with your audiences during presentation, and you know your application runs on your laptop.
 * Development debug if you develop applications connected with Wechat, facebook etc, and you know HTTP callback required from these platforms.
 * You can expose your applications in Kubernetes for testing event without Ingress required.
 
@@ -94,7 +94,8 @@ I want to say thanks to [RSocket](http://rsocket.io) & [Reactor](https://project
 
 ### References
 
+* ngrok: https://ngrok.com/
+* TryCloudflare: https://developers.cloudflare.com/argo-tunnel/learning/trycloudflare
 * RSocket:  http://rsocket.io/
 * RSocket Java: https://github.com/rsocket/rsocket-java
-* ngrok: https://ngrok.com/
 * Let's Encrypt: https://letsencrypt.org/
