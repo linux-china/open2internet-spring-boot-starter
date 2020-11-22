@@ -14,7 +14,7 @@ public class Open2InternetProperties {
     /**
      * access point to open your local service
      */
-    private String uri = "tcp://microservices.club:42252";
+    private String[] uri = new String[]{"tcp://microservices.club:42252"};
     /**
      * access token to define you local domain
      */
@@ -29,11 +29,11 @@ public class Open2InternetProperties {
      */
     private boolean enable = true;
 
-    public String getUri() {
+    public String[] getUri() {
         return uri;
     }
 
-    public void setUri(String uri) {
+    public void setUri(String[] uri) {
         this.uri = uri;
     }
 
