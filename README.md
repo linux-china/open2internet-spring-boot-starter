@@ -17,28 +17,18 @@ You can test your application from anywhere, Kubernetes, Serverless, Lambda styl
 
 ### How to use
 
-* please add jitpack repository in your pom.xml
-
-```xml
-<repositories>
-	<repository>
-	    <id>jitpack.io</id>
-	    <url>https://jitpack.io</url>
-	</repository>
-</repositories>
-```
-
 * Add open2internet dependencies
 
 ```xml
 <dependency>
-  <groupId>com.github.linux-china</groupId>
-  <artifactId>open2internet-spring-boot-starter</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+   <groupId>org.mvnsearch</groupId>
+   <artifactId>open2internet-spring-boot-starter</artifactId>
+   <version>1.0.0</version>
 </dependency>
 ```
 
 * Start your local Spring Boot application, and get hint from console.
+
 ```
 open2internet by @linux_china
 
