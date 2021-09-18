@@ -23,7 +23,7 @@ You can test your application from anywhere, Kubernetes, Serverless, Lambda styl
 <dependency>
    <groupId>org.mvnsearch</groupId>
    <artifactId>open2internet-spring-boot-starter</artifactId>
-   <version>1.0.0</version>
+   <version>1.1.0</version>
 </dependency>
 ```
 
